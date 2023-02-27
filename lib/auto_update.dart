@@ -17,11 +17,11 @@ class AutoUpdate {
 
   static Future<Map<dynamic, dynamic>> fetchGithub(
       String user, String packageName,
-      {String fileType = ".exe"}) async {
+      {String fileType = ".exe", String? githubPATToken}) async {
     Map<dynamic, dynamic> res = {};
     if (Platform.isAndroid) {
       return await _channel.invokeMethod(
-          "fetchGithub", {"user": user, "packageName": packageName});
+          "fetchGithub", {"user": user, "packageName": packageName, "githubPATToken": githubPATToken});
     } else if (Platform.isWindows) {
       List<dynamic>? packageInfo =
           await _channel.invokeListMethod("getProductAndVersion");
@@ -32,6 +32,7 @@ class AutoUpdate {
           "application/octet-stream",
           packageInfo[1],
           packageInfo[0] + fileType,
+          githubPATToken: githubPATToken,
         );
       }
       return res;
@@ -39,9 +40,9 @@ class AutoUpdate {
     return res;
   }
 
-  static Future<void> downloadAndUpdate(String url) async {
+  static Future<void> downloadAndUpdate(String url, {String? githubPATToken}) async {
     if (Platform.isAndroid) {
-      await _channel.invokeMethod("downloadAndUpdate", {"url": url});
+      await _channel.invokeMethod("downloadAndUpdate", {"url": url, "githubPATToken": githubPATToken});
     } else if (Platform.isWindows) {
       String? filePath = await downloadFile(
           Uri.parse(url),

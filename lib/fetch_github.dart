@@ -2,13 +2,16 @@ import 'dart:convert';
 import 'dart:io';
 
 Future<Map<String, String>> fetchGithub(String user, String packageName,
-    String type, String version, String appName) async {
+    String type, String version, String appName, {String? githubPATToken}) async {
   Map<String, String> results = {"assetUrl": ""};
   final client = HttpClient();
   client.userAgent = "auto_update";
 
   final request = await client.getUrl(Uri.parse(
       "https://api.github.com/repos/$user/$packageName/releases/latest"));
+  if (githubPATToken != null && githubPATToken != "") {
+    request.headers.set('Authorization', 'Bearer $githubPATToken');
+  }
   final response = await request.close();
 
   if (response.statusCode == 200) {
@@ -21,7 +24,9 @@ Future<Map<String, String>> fetchGithub(String user, String packageName,
       for (Map<dynamic, dynamic> asset in map["assets"]) {
         if ((asset["content_type"] != null && asset["content_type"] == type) &&
             (asset["name"] != null && asset["name"] == appName)) {
-          results["assetUrl"] = asset["browser_download_url"] ?? '';
+          results["assetUrl"] = (githubPATToken != null && githubPATToken != ""
+              ? asset["url"]
+              : asset["browser_download_url"]) ?? '';
           results["body"] = map["body"] ?? '';
           results["tag"] = map["tag_name"] ?? '';
         }

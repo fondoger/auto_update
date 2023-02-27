@@ -13,6 +13,7 @@ public class FileDownloader extends Thread{
 
     private final String url;
     private final File file;
+    private final String githubPATToken;
 
     public int downloaded = 0;
     public Exception exception;
@@ -20,6 +21,13 @@ public class FileDownloader extends Thread{
     public FileDownloader(String url, File file){
         this.url = url;
         this.file = file;
+        this.githubPATToken = null;
+    }
+
+    public FileDownloader(String url, File file, String githubPATToken){
+        this.url = url;
+        this.file = file;
+        this.githubPATToken = githubPATToken;
     }
 
     public void run(){
@@ -29,6 +37,10 @@ public class FileDownloader extends Thread{
             connection.setRequestProperty("Accept-Encoding",
                     "gzip, deflate, br");
             connection.setRequestProperty("User-Agent", "auto-update");
+            if (githubPATToken != null && githubPATToken != "") {
+                connection.setRequestProperty("Authorization", "Bearer " + githubPATToken);
+                connection.setRequestProperty("Accept", "application/octet-stream");
+            }
 
             if (connection.getResponseCode() == 200) {
                 try {

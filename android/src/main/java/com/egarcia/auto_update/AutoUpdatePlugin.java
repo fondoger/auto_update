@@ -49,12 +49,13 @@ public class AutoUpdatePlugin implements FlutterPlugin, MethodCallHandler, Activ
         fetchGithub(
                 Objects.requireNonNull(call.argument("user")),
                 Objects.requireNonNull(call.argument("packageName")),
-                "application/vnd.android.package-archive"
-                , result
+                "application/vnd.android.package-archive",
+                call.argument("githubPATToken"),
+                result
         );
         break;
       case "downloadAndUpdate":
-        downloadAndUpdate(Uri.parse(Objects.requireNonNull(call.argument("url"))), result);
+        downloadAndUpdate(Uri.parse(Objects.requireNonNull(call.argument("url"))), call.argument("githubPATToken"), result);
         break;
       case "closeActivity":
         activity.finish();
@@ -95,7 +96,7 @@ public class AutoUpdatePlugin implements FlutterPlugin, MethodCallHandler, Activ
   }
 
   private void fetchGithub(@NonNull String user, @NonNull String packageName,
-                                       @NonNull String type, @NonNull Result result){
+                                       @NonNull String type, String githubPATToken, @NonNull Result result){
     String appPackageName = AutoUpdatePlugin.getApplicationName(context.getApplicationContext())
             .replaceAll(" ", "") + ".apk";
     String versionName;
@@ -109,7 +110,7 @@ public class AutoUpdatePlugin implements FlutterPlugin, MethodCallHandler, Activ
       return;
     }
 
-    Github github = new Github(user, packageName, type, appPackageName, versionName);
+    Github github = new Github(user, packageName, type, appPackageName, versionName, githubPATToken);
     github.start();
 
     try {
@@ -139,7 +140,7 @@ public class AutoUpdatePlugin implements FlutterPlugin, MethodCallHandler, Activ
 
   }
 
-  private void downloadAndUpdate(@NonNull Uri url, @NonNull Result result){
+  private void downloadAndUpdate(@NonNull Uri url, String githubPATToken, @NonNull Result result){
 
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       if (!Environment.isExternalStorageManager()){
@@ -177,7 +178,7 @@ public class AutoUpdatePlugin implements FlutterPlugin, MethodCallHandler, Activ
     if (file.exists())
         file.delete();
 
-    FileDownloader fileDownloader = new FileDownloader(url.toString(), file);
+    FileDownloader fileDownloader = new FileDownloader(url.toString(), file, githubPATToken);
     fileDownloader.start();
     try {
       fileDownloader.join();
